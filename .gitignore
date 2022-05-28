@@ -1,0 +1,8 @@
+activate.bat
+persistent/prefixes.json
+persistent/prices.json
+persistent/blacklist.json
+persistent/reminders.json
+config.ini
+venv
+__pycache__
