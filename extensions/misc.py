@@ -5,7 +5,6 @@ import globals
 from discord.ext import commands
 
 class BlackListError(Exception):
-
     ...
 
 async def blacklistHook(ctx: commands.Context): # use before_invoke for every command now
@@ -94,9 +93,6 @@ class Misc(commands.Cog):
 
     @commands.command()
     async def blacklist(self, ctx: commands.Context, target: str, *commandlist):
-        
-        
-
         if (isinstance(ctx.message.channel, discord.channel.DMChannel)):
             await ctx.send("How about no?")
             return

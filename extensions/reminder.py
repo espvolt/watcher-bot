@@ -301,8 +301,8 @@ class Reminder(commands.Cog):
                 num += 1
             
             embed.add_field(name=f"reminders", value=value)
-            # Makes sure its a number
             
+            # Makes sure its a number
             check = lambda message: message.author.id == ctx.author.id and message.id == message.id and message.content.isnumeric()
             message = await ctx.send(embed=embed)
             try:

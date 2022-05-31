@@ -25,6 +25,9 @@ class Main(commands.Cog):
 
         prefixData = None
 
+        if (not os.path.exists("./persistent")):
+            os.mkdir("./persistent")
+
         if (os.path.exists("./persistent/prefixes.json")):
             with open("./persistent/prefixes.json", "r") as f:
                 prefixData = json.load(f)
@@ -117,12 +120,7 @@ class Main(commands.Cog):
 
         initReminderGlobals(eventLoop)
 
-        
-
-
-        
-
-        url = "espvolt/espvolt2_bot"
+        url = "espvolt/watcher-bot"
         await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=url)) 
     
     @commands.command()

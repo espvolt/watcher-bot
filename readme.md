@@ -1,0 +1,1 @@
+Simple bot I made for myself and hopefully others
