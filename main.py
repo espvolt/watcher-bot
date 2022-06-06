@@ -9,7 +9,8 @@ import asyncio
 
 from discord.ext import commands
 from extensions.priceWatcher import printPriceLoop
-from extensions.reminder import reminderFunction, initReminderGlobals
+from extensions.reminder import initReminderGlobals
+from extensions.poll import initPollGlobals
 from extensions.misc import Misc
 from pprint import pprint
 
@@ -51,7 +52,10 @@ class Main(commands.Cog):
                     # Guild ID is already string because it is from the json file
                     # Saving data in a dict so the bot doesnt have to get the channel each time it wants to print a price
                     # fetch_channel because DMChannels dont work.
-                    priceData[channelID] = {"links": data[channelID], "channelObject": await self.bot.fetch_channel(int(channelID))}
+                    try:
+                        priceData[channelID] = {"links": data[channelID], "channelObject": await self.bot.fetch_channel(int(channelID))}
+                    except:
+                        continue
 
         else:
             with open("./persistent/prices.json", "w") as f:
@@ -81,8 +85,11 @@ class Main(commands.Cog):
                             newData[userID][reminderKey]["nextTime"] = currentReminder["nextTime"]
 
                             newData[userID][reminderKey]["functionObject"] = None
-
-                    reminderData[channelID] = {"users": newData, "channelObject": await self.bot.fetch_channel(int(channelID))}
+                    
+                    try:
+                        reminderData[channelID] = {"users": newData, "channelObject": await self.bot.fetch_channel(int(channelID))}
+                    except:
+                        continue
 
         else:
             with open("./persistent/reminders.json", "w") as f:
@@ -100,10 +107,51 @@ class Main(commands.Cog):
                 blacklistData = {}
                 json.dump(blacklistData, f, indent=4)
 
+        pollData = None
+
+        if (os.path.exists("./persistent/polls.json")):
+            with open("./persistent/polls.json", "r", encoding="utf-8") as f:
+                pollData = {}
+                channelCache = {}
+                userCache = {}
+
+                data = json.load(f)
+
+                for messageID in data:
+                    pollData[messageID] = {}
+                    channelID = data[messageID]["channelID"]
+                    
+                    try:
+                        if (data[messageID]["channelID"] not in channelCache):
+                            channelCache[channelID] = await self.bot.fetch_channel(int(channelID))
+
+                            message = await channelCache[channelID].fetch_message(int(messageID))
+                    except:
+                        continue
+                    pollData[messageID]["messageObject"] = message
+                    pollData[messageID]["targetTime"] = data[messageID]["targetTime"]
+                    pollData[messageID]["fields"] = {}
+                    fields = data[messageID]["fields"]
+
+                    for field in fields:
+                        pollData[messageID]["fields"][field] = {"message": fields[field]["message"]}
+                        pollData[messageID]["fields"][field]["users"] = []
+                        for userID in pollData[messageID]["fields"][field]["users"]:
+                            if (userID not in userCache):
+                                userCache[userID] = self.bot.fetch_user(int(userID))
+
+                            pollData[messageID]["fields"][field]["users"].append(userCache[userID])
+
+        else:
+            with open("./persistent/polls.json", "w") as f:
+                pollData = {}
+                json.dump(pollData, f, indent=4)
+
         globals.reminderData = reminderData
         globals.prefixData = prefixData
         globals.priceData = priceData
         globals.blacklistData = blacklistData
+        globals.pollData = pollData
 
     @commands.Cog.listener("on_ready")
     async def on_ready(self):
@@ -118,7 +166,9 @@ class Main(commands.Cog):
         eventLoop = asyncio.get_event_loop()
         eventLoop.create_task(printPriceLoop())
 
+
         initReminderGlobals(eventLoop)
+        initPollGlobals(eventLoop, self.bot)
 
         url = "espvolt/watcher-bot"
         await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=url)) 
